@@ -1,20 +1,22 @@
 class PixalingClass {
+  String path;
   PImage img;
   int w, h;
   int bw, bh;
-  PixalingClass(PImage i, int ll, int hh) {
-    img = i;
+  PixalingClass(String loc, int ll, int hh) {
+    path = loc;
+    updateSquares(ll, hh);
+    pixelate();
+  }
+
+  void updateSquares(int newll, int newhh) {
+    img = loadImage(path);
     img.loadPixels();
-    w = ll;
-    h = hh;
-    println(img.width, img.height);
-    println("total squares: ", w*h);
+    w = newll;
+    h = newhh;
     bw = img.width/w;
     bh = img.height/h;
-    println(w, h);
-    println(bw, bh);
-    pixelate();
-    img.updatePixels();
+    println(w, h, w*h);
   }
 
   int getIdx(int x, int y) {
@@ -26,7 +28,6 @@ class PixalingClass {
       x += bw;
       int y = bh/2;
       for (int j = 0; j < h; ++j) {
-        //println(i, j, x, y);
         int f = 2;
         float ravg = 0.0;
         float gavg = 0.0;
@@ -61,6 +62,7 @@ class PixalingClass {
         y += bh;
       }
     }
+    img.updatePixels();
   }
   void pixel(int x, int y) {
     println(getIdx(x, y));
@@ -71,5 +73,11 @@ class PixalingClass {
       }
     }
     img.updatePixels();
+  }
+  String getColor(int x, int y) {
+    color c = img.pixels[getIdx(x, y)];
+    String cstr = red(c) + "," + green(c) + "," + blue(c); 
+    text(cstr, x, y+(y < height/2 ? 25 : -25));
+    return cstr;
   }
 }
