@@ -5,11 +5,23 @@ class PixalingClass {
   int bw, bh;
   boolean resize;
   color[] colors;
+  HashMap<Integer, String> colorLookup;
   boolean useList = false;
-  PixalingClass(String loc, int ll, int hh, boolean resz, color[] cs) {
+  PixalingClass(String loc, int ll, int hh, boolean resz, /*color[] cs*/String colorPath) {
     path = loc;
     resize = resz;
-    colors = cs;
+    colorLookup = new HashMap<Integer, String>();
+    String[] lines = loadStrings(colorPath);
+    //skip header
+    colors = new color[lines.length-1];
+    for (int i = 1; i < lines.length; ++i) {
+      String[] parts = lines[i].split(",");
+      String colorName = parts[0];
+      color colorVal = unhex("FF" + parts[1]);
+      println(colorName, colorVal);
+      colors[i-1] = colorVal;
+      colorLookup.put(colorVal, colorName);
+    }
     updateSquares(ll, hh);
     pixelate();
   }
@@ -122,10 +134,10 @@ class PixalingClass {
     return color(red, green, blue);
   }
   float colorDiff(color c1, color c2) {
-    return sqrt((red(c1)-red(c2))*(red(c1)-red(c2)) + 
-      (green(c1)-green(c2))*(green(c1)-green(c2)) + 
-      (blue(c1)-blue(c2))*(blue(c1)-blue(c2)));
-    //return abs(colorVal(c1) - colorVal(c2));
+    float redDiff = (red(c1)-red(c2))*0.75;//*0.39;
+    float greenDiff = (green(c1)+5-green(c2));//*0.59;
+    float blueDiff = (blue(c1)-blue(c2))*0.5;//*0.11;
+    return (redDiff*redDiff)+(greenDiff*greenDiff)+(blueDiff*blueDiff);
   }
   String colorToString(color c) {
     return red(c) + "," + green(c) + "," + blue(c);
@@ -135,5 +147,24 @@ class PixalingClass {
     String cstr = colorToString(c); 
     text(cstr, x, y+(y < height/2 ? 25 : -25));
     return cstr;
+  }
+  color getColorVal(int x, int y) {
+    color c = img.pixels[getIdx(x, y)];
+    return c;
+  }
+  void save() {
+    ArrayList<String> strings = new ArrayList<String>();
+    strings.add("xidx, yidx, hex, color name");
+    for (int i = 0; i < w; ++i) {
+      for (int j = 0; j < h; ++j) {
+        strings.add(i + "," + j + "," + hex(getColorVal(i, j)) + "," + colorLookup.get(getClosestColor(getColorVal(i, j))));
+      }
+    }
+    String[] strArr = new String[strings.size()];
+    for(int i = 0; i < strings.size(); ++i) {
+      strArr[i] = strings.get(i);
+    }
+    println(strings);
+    saveStrings("curColors.csv", strArr);
   }
 }
